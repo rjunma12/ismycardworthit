@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Is My Card Worth It?</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#6366f1', dark: '#4f46e5', light: '#e0e7ff' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .benefit-card:hover { transform: translateY(-1px); }
+    .card-chip {
+      background: linear-gradient(135deg, #f5c842 0%, #e0a800 100%);
+      border-radius: 4px;
+      width: 32px; height: 22px;
+    }
+    .verdict-worth { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border: 2px solid #34d399; }
+    .verdict-not   { background: linear-gradient(135deg, #fee2e2, #fecaca); border: 2px solid #f87171; }
+    .verdict-close  { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #fbbf24; }
+    input[type=range]::-webkit-slider-thumb { background: #6366f1; }
+    .tag { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
+
+<!-- HEADER -->
+<header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+  <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="bg-brand rounded-xl p-2">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-slate-800 leading-none">Is My Card Worth It?</h1>
+        <p class="text-xs text-slate-500">Free credit card value calculator</p>
+      </div>
+    </div>
+    <span class="tag bg-indigo-100 text-indigo-700">100% Free</span>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+
+  <!-- CARD PICKER -->
+  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <h2 class="text-lg font-semibold text-slate-800 mb-1">1. Pick Your Card</h2>
+    <p class="text-sm text-slate-500 mb-4">Choose a popular card or enter your own details below.</p>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5" id="presetCards">
+      <!-- Injected by JS -->
+    </div>
+
+    <div class="border-t border-slate-100 pt-5">
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Or enter manually</p>
+      <div class="grid sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Card Name</label>
+          <input id="cardName" type="text" placeholder="e.g. My Visa Card"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Annual Fee ($)</label>
+          <input id="annualFee" type="number" min="0" placeholder="95"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Sign-up Bonus Value ($)</label>
+          <input id="signupBonus" type="number" min="0" placeholder="0"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand"/>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENEFITS CHECKLIST -->
+  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="text-lg font-semibold text-slate-800">2. Check Benefits You Actually Use</h2>
+      <button onclick="toggleAll()" class="text-xs text-brand hover:underline font-medium" id="toggleAllBtn">Select All</button>
+    </div>
+    <p class="text-sm text-slate-500 mb-5">Only count benefits you genuinely use — be honest for an accurate result.</p>
+
+    <div class="grid sm:grid-cols-2 gap-3" id="benefitsList">
+      <!-- Injected by JS -->
+    </div>
+  </section>
+
+  <!-- MONTHLY SPEND -->
+  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <h2 class="text-lg font-semibold text-slate-800 mb-1">3. Your Monthly Spend (Optional)</h2>
+    <p class="text-sm text-slate-500 mb-5">Help us estimate rewards earned on top of flat benefits.</p>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">
+          Monthly spend: <span class="text-brand font-semibold" id="spendLabel">$1,000</span>
+        </label>
+        <input id="monthlySpend" type="range" min="0" max="10000" step="100" value="1000"
+          class="w-full accent-indigo-500"
+          oninput="document.getElementById('spendLabel').textContent = '$' + Number(this.value).toLocaleString(); calculate()"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">
+          Rewards rate: <span class="text-brand font-semibold" id="rateLabel">1.5%</span>
+        </label>
+        <input id="rewardsRate" type="range" min="0" max="5" step="0.5" value="1.5"
+          class="w-full accent-indigo-500"
+          oninput="document.getElementById('rateLabel').textContent = this.value + '%'; calculate()"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- VERDICT -->
+  <section id="verdictSection" class="rounded-2xl p-6 hidden">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-6">
+      <div class="text-6xl" id="verdictEmoji">✅</div>
+      <div class="flex-1">
+        <div class="text-2xl font-bold text-slate-800 mb-1" id="verdictTitle">Worth It!</div>
+        <div class="text-slate-600 text-sm" id="verdictDesc"></div>
+      </div>
+      <div class="text-right">
+        <div class="text-4xl font-bold" id="verdictNet"></div>
+        <div class="text-xs text-slate-500 mt-1">net annual value</div>
+      </div>
+    </div>
+
+    <!-- Breakdown -->
+    <div class="mt-6 border-t border-slate-200 pt-4 space-y-2" id="breakdownList"></div>
+  </section>
+
+  <!-- CTA -->
+  <div class="text-center text-slate-400 text-xs pb-6">
+    Values are estimates. Actual worth depends on your individual usage.
+    <br>Built as a free tool — no data collected, no sign-up required.
+  </div>
+
+</main>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const PRESET_CARDS = [
+  {
+    name: "Chase Sapphire Preferred",
+    fee: 95,
+    bonus: 500,
+    rate: 2,
+    color: "from-blue-600 to-blue-800",
+    benefits: {
+      travel_credit: 50,
+      dining_credit: 0,
+      lounge_access: 0,
+      global_entry: 0,
+      hotel_credit: 0,
+      streaming_credit: 0,
+      grocery_credit: 0,
+      doordash_credit: 0,
+      uber_credit: 0,
+      cell_phone: 0,
+      trip_delay: 100,
+      purchase_protection: 50,
+      extended_warranty: 50,
+      primary_rental: 80,
+    }
+  },
+  {
+    name: "Amex Gold Card",
+    fee: 250,
+    bonus: 750,
+    rate: 3,
+    color: "from-yellow-500 to-yellow-700",
+    benefits: {
+      travel_credit: 0,
+      dining_credit: 120,
+      lounge_access: 0,
+      global_entry: 0,
+      hotel_credit: 0,
+      streaming_credit: 0,
+      grocery_credit: 0,
+      doordash_credit: 0,
+      uber_credit: 120,
+      cell_phone: 0,
+      trip_delay: 0,
+      purchase_protection: 50,
+      extended_warranty: 50,
+      primary_rental: 0,
+    }
+  },
+  {
+    name: "Capital One Venture X",
+    fee: 395,
+    bonus: 1000,
+    rate: 2,
+    color: "from-red-600 to-red-800",
+    benefits: {
+      travel_credit: 300,
+      dining_credit: 0,
+      lounge_access: 300,
+      global_entry: 100,
+      hotel_credit: 0,
+      streaming_credit: 0,
+      grocery_credit: 0,
+      doordash_credit: 0,
+      uber_credit: 0,
+      cell_phone: 0,
+      trip_delay: 100,
+      purchase_protection: 50,
+      extended_warranty: 50,
+      primary_rental: 80,
+    }
+  },
+  {
+    name: "Amex Platinum",
+    fee: 695,
+    bonus: 1500,
+    rate: 1,
+    color: "from-slate-400 to-slate-600",
+    benefits: {
+      travel_credit: 200,
+      dining_credit: 0,
+      lounge_access: 500,
+      global_entry: 100,
+      hotel_credit: 200,
+      streaming_credit: 240,
+      grocery_credit: 0,
+      doordash_credit: 0,
+      uber_credit: 200,
+      cell_phone: 0,
+      trip_delay: 100,
+      purchase_protection: 50,
+      extended_warranty: 50,
+      primary_rental: 0,
+    }
+  },
+  {
+    name: "Chase Freedom Unlimited",
+    fee: 0,
+    bonus: 200,
+    rate: 1.5,
+    color: "from-sky-500 to-sky-700",
+    benefits: {
+      travel_credit: 0, dining_credit: 0, lounge_access: 0, global_entry: 0,
+      hotel_credit: 0, streaming_credit: 0, grocery_credit: 0, doordash_credit: 0,
+      uber_credit: 0, cell_phone: 0, trip_delay: 50, purchase_protection: 30,
+      extended_warranty: 30, primary_rental: 0,
+    }
+  },
+  {
+    name: "Citi Double Cash",
+    fee: 0,
+    bonus: 0,
+    rate: 2,
+    color: "from-emerald-500 to-emerald-700",
+    benefits: {
+      travel_credit: 0, dining_credit: 0, lounge_access: 0, global_entry: 0,
+      hotel_credit: 0, streaming_credit: 0, grocery_credit: 0, doordash_credit: 0,
+      uber_credit: 0, cell_phone: 0, trip_delay: 0, purchase_protection: 0,
+      extended_warranty: 0, primary_rental: 0,
+    }
+  },
+];
+
+const BENEFITS = [
+  { id: "travel_credit",      label: "Travel / Airline Credit",        icon: "✈️",  desc: "Annual airline fee credit" },
+  { id: "dining_credit",      label: "Dining / Restaurant Credit",     icon: "🍽️", desc: "Monthly dining statement credits" },
+  { id: "lounge_access",      label: "Airport Lounge Access",          icon: "🛋️", desc: "Priority Pass or proprietary lounge" },
+  { id: "global_entry",       label: "Global Entry / TSA PreCheck",    icon: "🛂", desc: "Application fee reimbursement every ~4 years" },
+  { id: "hotel_credit",       label: "Hotel Credit / Status",          icon: "🏨", desc: "Annual hotel statement credits" },
+  { id: "streaming_credit",   label: "Streaming / Digital Credits",    icon: "📺", desc: "Credits for streaming services" },
+  { id: "grocery_credit",     label: "Grocery Store Credit",           icon: "🛒", desc: "Monthly grocery statement credits" },
+  { id: "doordash_credit",    label: "DoorDash / Delivery Credit",     icon: "🚚", desc: "Monthly delivery app credits" },
+  { id: "uber_credit",        label: "Uber / Lyft Credit",             icon: "🚗", desc: "Monthly ride or Uber Cash credits" },
+  { id: "cell_phone",         label: "Cell Phone Protection",          icon: "📱", desc: "Coverage when you pay bill with the card" },
+  { id: "trip_delay",         label: "Trip Delay / Cancellation",      icon: "⏰", desc: "Insurance value for delayed travel" },
+  { id: "purchase_protection",label: "Purchase Protection",            icon: "🛡️", desc: "Damage/theft protection on new purchases" },
+  { id: "extended_warranty",  label: "Extended Warranty",              icon: "📦", desc: "Extra warranty on eligible items" },
+  { id: "primary_rental",     label: "Primary Rental Car Coverage",    icon: "🚙", desc: "Skip the rental counter insurance" },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  cardName: "",
+  annualFee: 0,
+  signupBonus: 0,
+  rewards: 0,
+  benefitValues: {},
+  selectedBenefits: new Set(),
+};
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  renderPresetCards();
+  renderBenefits();
+  loadPreset(0);
+}
+
+function renderPresetCards() {
+  const el = document.getElementById('presetCards');
+  el.innerHTML = PRESET_CARDS.map((c, i) => `
+    <button onclick="loadPreset(${i})" id="preset-${i}"
+      class="text-left rounded-xl p-3 border-2 border-transparent hover:border-indigo-300 transition-all bg-gradient-to-br ${c.color} text-white shadow group relative">
+      <div class="card-chip mb-2"></div>
+      <div class="text-xs font-bold leading-tight">${c.name}</div>
+      <div class="text-xs opacity-80 mt-1">$${c.fee}/yr fee</div>
+    </button>
+  `).join('');
+}
+
+function renderBenefits() {
+  const el = document.getElementById('benefitsList');
+  el.innerHTML = BENEFITS.map(b => `
+    <label id="bl-${b.id}" class="benefit-card flex items-start gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer transition-all hover:border-indigo-300 hover:bg-indigo-50/50">
+      <input type="checkbox" id="chk-${b.id}" onchange="toggleBenefit('${b.id}', this.checked)"
+        class="mt-0.5 accent-indigo-500 w-4 h-4 flex-shrink-0"/>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="text-lg leading-none">${b.icon}</span>
+          <span class="text-sm font-semibold text-slate-700">${b.label}</span>
+        </div>
+        <div class="text-xs text-slate-400 mt-0.5">${b.desc}</div>
+      </div>
+      <span id="bval-${b.id}" class="text-xs font-bold text-slate-300 whitespace-nowrap">$0/yr</span>
+    </label>
+  `).join('');
+}
+
+function loadPreset(index) {
+  const card = PRESET_CARDS[index];
+  // Update active state
+  PRESET_CARDS.forEach((_, i) => {
+    const el = document.getElementById(`preset-${i}`);
+    if (el) el.classList.toggle('ring-2', i === index);
+    if (el) el.classList.toggle('ring-white', i === index);
+  });
+
+  document.getElementById('cardName').value   = card.name;
+  document.getElementById('annualFee').value  = card.fee;
+  document.getElementById('signupBonus').value = card.bonus;
+  document.getElementById('rewardsRate').value = card.rate;
+  document.getElementById('rateLabel').textContent = card.rate + '%';
+
+  state.annualFee    = card.fee;
+  state.signupBonus  = card.bonus;
+  state.cardName     = card.name;
+  state.benefitValues = { ...card.benefits };
+
+  // Update benefit value labels
+  BENEFITS.forEach(b => {
+    const val = card.benefits[b.id] || 0;
+    const labelEl = document.getElementById(`bval-${b.id}`);
+    if (labelEl) labelEl.textContent = val > 0 ? `$${val}/yr` : '$0/yr';
+  });
+
+  calculate();
+}
+
+function toggleBenefit(id, checked) {
+  if (checked) {
+    state.selectedBenefits.add(id);
+    document.getElementById(`bl-${id}`).classList.add('border-indigo-400', 'bg-indigo-50');
+  } else {
+    state.selectedBenefits.delete(id);
+    document.getElementById(`bl-${id}`).classList.remove('border-indigo-400', 'bg-indigo-50');
+  }
+  calculate();
+}
+
+let allSelected = false;
+function toggleAll() {
+  allSelected = !allSelected;
+  document.getElementById('toggleAllBtn').textContent = allSelected ? 'Deselect All' : 'Select All';
+  BENEFITS.forEach(b => {
+    const chk = document.getElementById(`chk-${b.id}`);
+    if (chk) {
+      chk.checked = allSelected;
+      toggleBenefit(b.id, allSelected);
+    }
+  });
+}
+
+// ─── INPUTS ───────────────────────────────────────────────────────────────────
+document.getElementById('cardName').addEventListener('input', e => { state.cardName = e.target.value; });
+document.getElementById('annualFee').addEventListener('input', e => { state.annualFee = Number(e.target.value) || 0; calculate(); });
+document.getElementById('signupBonus').addEventListener('input', e => { state.signupBonus = Number(e.target.value) || 0; calculate(); });
+
+// ─── CALCULATE ────────────────────────────────────────────────────────────────
+function calculate() {
+  const fee          = Number(document.getElementById('annualFee').value)   || 0;
+  const bonus        = Number(document.getElementById('signupBonus').value)  || 0;
+  const monthlySpend = Number(document.getElementById('monthlySpend').value) || 0;
+  const rate         = Number(document.getElementById('rewardsRate').value)  || 0;
+
+  const annualRewards = (monthlySpend * 12 * rate) / 100;
+
+  let benefitTotal = 0;
+  const breakdownItems = [];
+
+  state.selectedBenefits.forEach(id => {
+    const b = BENEFITS.find(x => x.id === id);
+    const val = state.benefitValues[id] || 0;
+    if (b && val > 0) {
+      benefitTotal += val;
+      breakdownItems.push({ label: b.icon + ' ' + b.label, value: val });
+    }
+  });
+
+  // Spread bonus over 2 years
+  const bonusAnnualized = bonus / 2;
+  const totalValue = benefitTotal + annualRewards + bonusAnnualized;
+  const netValue   = totalValue - fee;
+
+  // Show verdict
+  const section = document.getElementById('verdictSection');
+  section.classList.remove('hidden');
+
+  if (netValue > 50) {
+    section.className = 'rounded-2xl p-6 verdict-worth';
+    document.getElementById('verdictEmoji').textContent  = '✅';
+    document.getElementById('verdictTitle').textContent  = 'Worth It!';
+    document.getElementById('verdictDesc').textContent   = `You get $${totalValue.toFixed(0)} in value for a $${fee} annual fee — a solid return.`;
+  } else if (netValue >= -50) {
+    section.className = 'rounded-2xl p-6 verdict-close';
+    document.getElementById('verdictEmoji').textContent  = '🤔';
+    document.getElementById('verdictTitle').textContent  = 'It\'s Close…';
+    document.getElementById('verdictDesc').textContent   = `You\'re roughly breaking even. Consider whether you value the card\'s other perks.`;
+  } else {
+    section.className = 'rounded-2xl p-6 verdict-not';
+    document.getElementById('verdictEmoji').textContent  = '❌';
+    document.getElementById('verdictTitle').textContent  = 'Not Worth It';
+    document.getElementById('verdictDesc').textContent   = `You\'re paying $${fee} but only getting ~$${totalValue.toFixed(0)} in value. Consider a no-fee card.`;
+  }
+
+  const sign = netValue >= 0 ? '+' : '';
+  document.getElementById('verdictNet').textContent = sign + '$' + Math.round(netValue).toLocaleString();
+  document.getElementById('verdictNet').className   = `text-4xl font-bold ${netValue >= 0 ? 'text-emerald-600' : 'text-red-600'}`;
+
+  // Breakdown
+  const breakdown = document.getElementById('breakdownList');
+  const rows = [
+    ...breakdownItems.map(i => ({ label: i.label, value: i.value, color: 'text-emerald-600' })),
+  ];
+  if (annualRewards > 0) rows.push({ label: '💳 Rewards Earned (est.)', value: annualRewards, color: 'text-emerald-600' });
+  if (bonusAnnualized > 0) rows.push({ label: '🎁 Sign-up Bonus (spread over 2 yrs)', value: bonusAnnualized, color: 'text-indigo-600' });
+  rows.push({ label: '💸 Annual Fee', value: -fee, color: 'text-red-500' });
+  rows.push({ label: '<strong>Net Annual Value</strong>', value: netValue, color: netValue >= 0 ? 'text-emerald-700 font-bold' : 'text-red-700 font-bold', border: true });
+
+  breakdown.innerHTML = rows.map(r => `
+    <div class="${r.border ? 'border-t border-slate-300 pt-3 mt-1' : ''} flex justify-between items-center text-sm">
+      <span class="text-slate-600">${r.label}</span>
+      <span class="${r.color}">${r.value >= 0 ? '+' : ''}$${Math.abs(r.value).toFixed(0)}</span>
+    </div>
+  `).join('');
+}
+
+init();
+</script>
+</body>
+</html>
